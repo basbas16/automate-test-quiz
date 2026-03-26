@@ -1,3 +1,4 @@
+import re
 import time
 
 from appium import webdriver
@@ -7,7 +8,29 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 
-def scroll_down(driver):
+def item_selector(driver, target_text):
+    # Scroll until an element with text "Entronica Channel" is visible
+    ui_selector = f'new UiScrollable(new UiSelector().scrollable(true)).scrollIntoView(newUiSelector().text("{target_text}"))'
+
+    # Execute the native Android command
+    driver.find_element(AppiumBy.ANDROID_UIAUTOMATOR, ui_selector)
+
+
+def get_video_name(video_elements):
+
+    video_name = []
+    for index, video in enumerate(video_elements):
+        description = video.get_attribute("content-desc")
+        print(f"Video {index + 1}: {description}")
+        title = description.split(" - ")[0]
+        print(f"Title: {title}")
+        video_name.append(title)
+        print("-" * 30)
+
+    return video_name
+
+
+def scroll(driver, direction="down"):
     # Get screen dimensions
     size = driver.get_window_size()
     width = size["width"]
@@ -18,7 +41,11 @@ def scroll_down(driver):
     end_x = width / 2
     end_y = height * 0.2  # 20% up the screen
     # Perform the swipe (Duration is in milliseconds)
-    driver.swipe(start_x, start_y, end_x, end_y, 800)
+    if direction == "down":
+        driver.swipe(start_x, start_y, end_x, end_y, 800)
+
+    else:
+        driver.swipe(end_x, end_y, start_x, start_y, 800)
 
 
 def run_test():
@@ -31,16 +58,19 @@ def run_test():
     options.app_activity = (
         "com.google.android.apps.youtube.app.watchwhile.WatchWhileActivity"
     )
-
-    options.unicode_keyboard = True
-    options.reset_keyboard = True
-    options.auto_grant_permissions = True
+    options.load_capabilities(
+        {
+            "unicode_keyboard": True,
+            "reset_keyboard": True,
+            "auto_grant_permissions": True,
+        }
+    )
 
     driver = webdriver.Remote("http://127.0.0.1:4723", options=options)
 
     try:
         print("Android Emu Connected")
-        wait = WebDriverWait(driver, 20)
+        wait = WebDriverWait(driver, 30)
 
         search_icon = wait.until(
             EC.element_to_be_clickable((AppiumBy.ACCESSIBILITY_ID, "Search"))
@@ -84,7 +114,6 @@ def run_test():
         # # Get the text of the very first result
         # print(f"The first video is by: {element}")
         print("Search completed!")
-        print(f"elementId: {element.id}")
 
         channel_xpath = '//*[contains(@content-desc, "Go to channel")]'
 
@@ -93,7 +122,6 @@ def run_test():
         )
 
         click_channel.click()
-        print(f"Click Channel: {click_channel}")
         video_content_xpath = '//*[contains(@content-desc, "Videos")]'
 
         video_content = wait.until(
@@ -104,14 +132,30 @@ def run_test():
 
         time.sleep(5)
 
-        scroll_down(driver=driver)
+        scroll(driver=driver)
 
         video_xpath = '//*[contains(@content-desc, "play video")]'
 
-        list_all_video = wait.until(
-            EC.presence_of_all_elements_located((AppiumBy.XPATH, video_xpath))
-        )
-        print(len(list_all_video))
+        list_all_video = driver.find_elements(AppiumBy.XPATH, video_xpath)
+        len_all_video = len(list_all_video)
+
+        if len_all_video > 1:
+            print("Channel have more than 1 video")
+            print(f"Video in channel = {len_all_video}")
+        else:
+            print("Channel has no video")
+
+        video_list = get_video_name(list_all_video)
+        print(video_list)
+
+        # scroll(driver, "up")
+        time.sleep(5)
+
+        video_name = video_list[0]
+        video_xpath = f"//*[contains(@content-desc, '{video_name}')]"
+
+        video = wait.until(EC.element_to_be_clickable((AppiumBy.XPATH, video_xpath)))
+        video.click()
 
     except Exception as e:
         print(f"Failed: {e}")
