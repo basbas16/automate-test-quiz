@@ -25,7 +25,7 @@ wheels = [
 ]
 
 [[package]]
-name = "automate-test-appium"
+name = "automate-test"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

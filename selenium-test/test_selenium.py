@@ -7,15 +7,24 @@ from selenium import webdriver
 from selenium.webdriver import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import Select, WebDriverWait
 
 
 class TestWebForm:
     @pytest.fixture(autouse=True)
     def setup(self):
+
+        options = webdriver.ChromeOptions()
+        if os.environ.get("CI") == "true":
+            options.add_argument("--headless=new")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+            # Set a default window size for headless mode
+            options.add_argument("--window-size=1920,1080")
         """Set up the Chrome driver before each test."""
-        self.driver = webdriver.Chrome()
+        self.driver = webdriver.Chrome(options=options)
         self.driver.maximize_window()
         self.driver.implicitly_wait(5)
         self.wait = WebDriverWait(self.driver, 10)
@@ -56,7 +65,9 @@ class TestWebForm:
         readonly_text_box = driver.find_element(By.NAME, "my-readonly")
         initial_value = readonly_text_box.get_attribute("value")
         readonly_text_box.send_keys("Trying to edit")
-        assert readonly_text_box.get_attribute("value") == initial_value, "Readonly box value should not change"
+        assert readonly_text_box.get_attribute("value") == initial_value, (
+            "Readonly box value should not change"
+        )
 
         # Dropdown (Select)
         dropdown_element = driver.find_element(By.NAME, "my-select")
@@ -129,6 +140,8 @@ class TestWebForm:
 
         # Calculate pixel offset based on target value relative to current value
         offset = ((target_value - current_val) / (max_val - min_val)) * width
-        
+
         actions = ActionChains(self.driver)
-        actions.click_and_hold(slider_element).move_by_offset(offset, 0).release().perform()
+        actions.click_and_hold(slider_element).move_by_offset(
+            offset, 0
+        ).release().perform()
