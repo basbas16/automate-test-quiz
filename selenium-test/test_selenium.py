@@ -1,11 +1,17 @@
 import os
 import time
+from datetime import datetime
 
 from selenium import webdriver
 from selenium.webdriver import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
+
+
+def get_date_time():
+    return datetime.now().strftime("%Y-%m-%d_%H:%M")
+
 
 driver = webdriver.Chrome()
 driver.maximize_window()
@@ -97,6 +103,15 @@ actions = ActionChains(driver)
 actions.click_and_hold(slider_element).move_by_offset(
     pixel_offset, 0
 ).release().perform()
+
+date_now = get_date_time()
+before_path = f"./images/before_submitting_{date_now}.png"
+after_path = f"./images/after_submitting_{date_now}.png"
+driver.save_screenshot(before_path)
+
+submit_button = driver.find_element(By.CSS_SELECTOR, "button")
+submit_button.click()
+driver.save_screenshot(after_path)
 
 time.sleep(5)
 driver.quit()
