@@ -1,4 +1,3 @@
-import re
 import time
 
 from appium import webdriver
@@ -53,7 +52,6 @@ def run_test():
     options.platform_name = "Android"
     options.automation_name = "UiAutomator2"
     options.device_name = "emulator-5554"
-
     options.app_package = "com.google.android.youtube"
     options.app_activity = (
         "com.google.android.apps.youtube.app.watchwhile.WatchWhileActivity"
