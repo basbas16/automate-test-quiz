@@ -33,7 +33,7 @@ class TestWebForm:
 
     def get_date_time(self):
         """Helper to get current date and time formatted as a string."""
-        return datetime.now().strftime("%Y-%m-%d_%H:%M")
+        return datetime.now().strftime("%Y-%m-%d_%H_%M")
 
     def test_submit_web_form(self):
         """Test the Selenium web form with various input types."""
